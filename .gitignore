@@ -16,5 +16,7 @@ hs_err_pid*
 
 target
 
+logs
+
 out
 *.log
