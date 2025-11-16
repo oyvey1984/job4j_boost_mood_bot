@@ -8,6 +8,8 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import ru.job4j.model.User;
+import ru.job4j.repository.UserRepository;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,6 +19,9 @@ import java.util.Map;
 @Service
 public class TgRemoteService extends TelegramLongPollingBot {
 
+    private final String botName;
+    private final String botToken;
+    private final UserRepository userRepository;
     private static final Map<String, String> MOOD_RESP = new HashMap<>();
 
     static {
@@ -27,14 +32,12 @@ public class TgRemoteService extends TelegramLongPollingBot {
         MOOD_RESP.put("sleepy", "Пора на боковую! Даже супергерои отдыхают, ты не исключение.");
     }
 
-
-    private final String botName;
-    private final String botToken;
-
     public TgRemoteService(@Value("${telegram.bot.name}") String botName,
-                           @Value("${telegram.bot.token}") String botToken) {
+                           @Value("${telegram.bot.token}") String botToken,
+                           UserRepository userRepository) {
         this.botName = botName;
         this.botToken = botToken;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -55,8 +58,15 @@ public class TgRemoteService extends TelegramLongPollingBot {
             send(new SendMessage(String.valueOf(chatId), MOOD_RESP.get(data)));
         }
         if (update.hasMessage() && update.getMessage().hasText()) {
-            long chatId = update.getMessage().getChatId();
-            send(sendButtons(chatId));
+            var message = update.getMessage();
+            if ("/start".equals(message.getText())) {
+                long chatId = message.getChatId();
+                var user = new User();
+                user.setClientId(message.getFrom().getId());
+                user.setChatId(chatId);
+                userRepository.add(user);
+                send(sendButtons(chatId));
+            }
         }
     }
 
@@ -95,6 +105,4 @@ public class TgRemoteService extends TelegramLongPollingBot {
         inline.setCallbackData(data);
         return inline;
     }
-
-
 }
