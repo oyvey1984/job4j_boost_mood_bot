@@ -1,4 +1,10 @@
 package ru.job4j.repository;
 
-public class UserRepository {
+import ru.job4j.model.User;
+
+import java.util.List;
+
+public interface UserRepository {
+    List<User> findAll();
+    User findByClientId(Long clientId);
 }
