@@ -13,12 +13,6 @@ public class DIByDirectInjectMain   {
         System.out.println("Bean is going through @PostConstruct init.");
     }
 
-    public static void main(String[] args) {
-        var handler = new BotCommandHandler();
-        var tg = new TelegramBotService(handler);
-        tg.receive(new Content());
-    }
-
     @PreDestroy
     public void destroy() {
         System.out.println("Bean will be destroyed via @PreDestroy.");
