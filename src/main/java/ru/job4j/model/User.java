@@ -1,11 +1,21 @@
 package ru.job4j.model;
 
+import jakarta.persistence.*;
+
 import java.util.Objects;
 
+@Entity
+@Table(name = "mb_user")
 public class User {
 
-    private long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "client_id")
     private long clientId;
+
+    @Column(name = "chat_id")
     private long chatId;
 
     public User() {
