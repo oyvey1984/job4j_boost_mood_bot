@@ -8,4 +8,6 @@ import java.util.List;
 @Repository
 public interface MoodLogRepository extends CrudRepository<MoodLog, Long> {
     List<MoodLog> findAll();
+    List<MoodLog> findByUserClientIdAndCreatedAtBetween(Long clientId, long from, long to);
+
 }
