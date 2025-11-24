@@ -10,5 +10,6 @@ import java.util.Optional;
 public interface UserRepository extends CrudRepository<User, Long> {
     List<User> findAll();
     Optional<User> findByChatId(Long chatId);
+    Optional<User> findByClientId(Long chatId);
     void add(User user);
 }
