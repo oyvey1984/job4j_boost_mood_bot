@@ -12,18 +12,4 @@ public class TelegramBotService {
     public TelegramBotService(BotCommandHandler handler) {
         this.handler = handler;
     }
-
-    @PostConstruct
-    public void init() {
-        System.out.println("Bean is going through @PostConstruct init.");
-    }
-
-    public void receive(Content content) {
-        handler.receive(content);
-    }
-
-    @PreDestroy
-    public void destroy() {
-        System.out.println("Bean will be destroyed via @PreDestroy.");
-    }
 }
