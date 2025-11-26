@@ -1,17 +1,21 @@
 package ru.job4j.recommendation;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
+import ru.job4j.content.Content;
+import ru.job4j.content.ContentProvider;
+
+import java.util.List;
+import java.util.Random;
 
 public class RecommendationEngine {
+    private final List<ContentProvider> contents;
+    private static final Random RND = new Random(System.currentTimeMillis());
 
-    @PostConstruct
-    public void init() {
-        System.out.println("Bean is going through @PostConstruct init.");
+    public RecommendationEngine(List<ContentProvider> contents) {
+        this.contents = contents;
     }
 
-    @PreDestroy
-    public void destroy() {
-        System.out.println("Bean will be destroyed via @PreDestroy.");
+    public Content recommendFor(Long chatId, Long moodId) {
+        var index = RND.nextInt(0, contents.size());
+        return contents.get(index).byMood(chatId, moodId);
     }
 }
