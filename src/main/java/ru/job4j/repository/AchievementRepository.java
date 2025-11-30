@@ -9,4 +9,6 @@ import java.util.List;
 public interface AchievementRepository extends CrudRepository<Achievement, Long> {
     List<Achievement> findAll();
     List<Achievement> findByUserClientId(Long clientId);
+
+    boolean existsByUserClientIdAndAwardId(long clientId, Long id);
 }
