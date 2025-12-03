@@ -39,7 +39,7 @@ public class MoodLogFakeRepository
                 .filter(moodLog -> moodLog.getCreatedAt() <= endOfDay)
                 .map(MoodLog::getUser)
                 .distinct()
-                .collect(Collectors.toList());
+                .toList();
 
         return memory.values().stream()
                 .map(MoodLog::getUser)
@@ -50,8 +50,12 @@ public class MoodLogFakeRepository
 
     @Override
     public List<MoodLog> findByUserClientIdAndCreatedAtBetween(Long clientId, long from, long to) {
-        return List.of();
+        return memory.values().stream()
+                .filter(moodLog -> moodLog.getUser().getClientId() == clientId)
+                .filter(moodLog -> moodLog.getCreatedAt() >= from && moodLog.getCreatedAt() <= to)
+                .collect(Collectors.toList());
     }
+
 
     @Override
     public List<MoodLog> findMoodLogsForWeek(Long userId, long weekStart) {

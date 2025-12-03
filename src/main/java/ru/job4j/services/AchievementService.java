@@ -73,23 +73,26 @@ public class AchievementService implements ApplicationListener<UserEvent> {
         if (logs.isEmpty()) {
             return 0;
         }
-        Map<LocalDate, Boolean> goodByDay = logs.stream()
-                .collect(Collectors.groupingBy(
-                        log -> Instant.ofEpochMilli(log.getCreatedAt())
-                                .atZone(ZoneId.systemDefault())
-                                .toLocalDate(),
-                        Collectors.mapping(
-                                l -> l.getMood().isGood(),
-                                Collectors.reducing(false, (a, b) -> a || b)
-                        )
-                ));
+
+        Set<LocalDate> goodDays = logs.stream()
+                .filter(log -> log.getMood().isGood())
+                .map(log -> Instant.ofEpochMilli(log.getCreatedAt())
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate())
+                .collect(Collectors.toCollection(TreeSet::new));
+
+        LocalDate lastDate = goodDays.stream()
+                .max(LocalDate::compareTo)
+                .orElse(LocalDate.MIN);
 
         long streak = 0;
-        LocalDate today = LocalDate.now();
-        while (goodByDay.getOrDefault(today, false)) {
+        LocalDate checkDate = lastDate;
+
+        while (goodDays.contains(checkDate)) {
             streak++;
-            today = today.minusDays(1);
+            checkDate = checkDate.minusDays(1);
         }
+
         return streak;
     }
 
