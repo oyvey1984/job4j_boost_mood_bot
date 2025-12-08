@@ -51,7 +51,9 @@ public class BotCommandHandler {
         user.setChatId(chatId);
         userRepository.save(user);
         var content = new Content(user.getChatId());
-        content.setText("Как настроение?");
+        content.setText("Добро пожаловать! Я бот для отслеживания настроения. "
+                + "Я буду спрашивать вас о настроении каждый день. "
+                + "Выберите ваше текущее настроение:");
         content.setMarkup(tgUI.buildButtons());
         return Optional.of(content);
     }

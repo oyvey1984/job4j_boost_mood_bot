@@ -16,7 +16,7 @@ public class AwardFakeRepository
     private long seq = 1;
 
     @Override
-    public Optional<Award> findByDaysRequired(int daysRequired) {
+    public Optional<Award> findByDays(int daysRequired) {
         return memory.values().stream()
                 .filter(a -> a.getDays() == daysRequired)
                 .findFirst();

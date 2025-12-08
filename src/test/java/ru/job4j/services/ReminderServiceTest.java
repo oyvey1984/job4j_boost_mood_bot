@@ -2,13 +2,11 @@ package ru.job4j.services;
 
 import org.junit.jupiter.api.Test;
 import ru.job4j.content.SentContent;
-import ru.job4j.services.TgUI;
 import ru.job4j.content.Content;
 import ru.job4j.model.Mood;
 import ru.job4j.model.MoodLog;
 import ru.job4j.model.User;
-import ru.job4j.repository.MoodFakeRepository;
-import ru.job4j.repository.MoodLogFakeRepository;
+import ru.job4j.repository.*;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -27,23 +25,31 @@ class ReminderServiceTest {
                 result.add(content);
             }
         };
+
         var moodRepository = new MoodFakeRepository();
         moodRepository.save(new Mood("Good", true));
+
         var moodLogRepository = new MoodLogFakeRepository();
+        var userRepository = new UserFakeRepository(moodLogRepository);
+
         var user = new User();
-        user.setChatId(100);
+        user.setChatId(100L);
+        userRepository.save(user);
+
         var moodLog = new MoodLog();
         moodLog.setUser(user);
         var yesterday = LocalDate.now()
-                .minusDays(10)
+                .minusDays(1)
                 .atStartOfDay(ZoneId.systemDefault())
                 .toInstant()
                 .toEpochMilli() - 1;
         moodLog.setCreatedAt(yesterday);
         moodLogRepository.save(moodLog);
+
         var tgUI = new TgUI(moodRepository);
-        new ReminderService(sentContent, moodLogRepository, tgUI)
+        new ReminderService(sentContent, userRepository, tgUI)
                 .remindUsers();
+
         assertThat(result.iterator().next().getMarkup().getKeyboard()
                 .iterator().next().iterator().next().getText()).isEqualTo("Good");
     }
@@ -57,11 +63,17 @@ class ReminderServiceTest {
                 result.add(content);
             }
         };
+
         var moodRepository = new MoodFakeRepository();
         moodRepository.save(new Mood("Good", true));
+
         var moodLogRepository = new MoodLogFakeRepository();
+        var userRepository = new UserFakeRepository(moodLogRepository);
+
         var user = new User();
-        user.setChatId(777);
+        user.setChatId(777L);
+        userRepository.save(user);
+
         long today = LocalDate.now()
                 .atStartOfDay(ZoneId.systemDefault())
                 .toInstant()
@@ -70,8 +82,9 @@ class ReminderServiceTest {
         moodLog.setUser(user);
         moodLog.setCreatedAt(today);
         moodLogRepository.save(moodLog);
+
         var tgUI = new TgUI(moodRepository);
-        new ReminderService(sentContent, moodLogRepository, tgUI)
+        new ReminderService(sentContent, userRepository, tgUI)
                 .remindUsers();
         assertThat(result).isEmpty();
     }
@@ -85,13 +98,20 @@ class ReminderServiceTest {
                 result.add(content);
             }
         };
+
         var moodRepository = new MoodFakeRepository();
         moodRepository.save(new Mood("Good", true));
+
         var moodLogRepository = new MoodLogFakeRepository();
+        var userRepository = new UserFakeRepository(moodLogRepository);
+
         var user1 = new User();
         user1.setId(1L);
-        user1.setChatId(100);
+        user1.setChatId(100L);
+        userRepository.save(user1);
+
         var moodLog1 = new MoodLog();
+        moodLog1.setId(1L);
         moodLog1.setUser(user1);
         long today = LocalDate.now()
                 .atStartOfDay(ZoneId.systemDefault())
@@ -102,8 +122,11 @@ class ReminderServiceTest {
 
         var user2 = new User();
         user2.setId(2L);
-        user2.setChatId(200);
+        user2.setChatId(200L);
+        userRepository.save(user2);
+
         var moodLog2 = new MoodLog();
+        moodLog2.setId(2L);
         moodLog2.setUser(user2);
         long tenDaysAgo = LocalDate.now()
                 .minusDays(10)
@@ -113,11 +136,22 @@ class ReminderServiceTest {
         moodLog2.setCreatedAt(tenDaysAgo);
         moodLogRepository.save(moodLog2);
 
+        var startOfDay = LocalDate.now()
+                .atStartOfDay(ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli();
+        var endOfDay = LocalDate.now()
+                .plusDays(1)
+                .atStartOfDay(ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli() - 1;
+
         var tgUI = new TgUI(moodRepository);
-        new ReminderService(sentContent, moodLogRepository, tgUI)
+        new ReminderService(sentContent, userRepository, tgUI)
                 .remindUsers();
+
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).getChatId()).isEqualTo(200);
+        assertThat(result.get(0).getChatId()).isEqualTo(200L);
     }
 
     @Test
@@ -129,12 +163,46 @@ class ReminderServiceTest {
                 result.add(content);
             }
         };
+
         var moodRepository = new MoodFakeRepository();
         moodRepository.save(new Mood("Good", true));
+
         var moodLogRepository = new MoodLogFakeRepository();
+        var userRepository = new UserFakeRepository(moodLogRepository);
+
         var tgUI = new TgUI(moodRepository);
-        new ReminderService(sentContent, moodLogRepository, tgUI)
+        new ReminderService(sentContent, userRepository, tgUI)
                 .remindUsers();
         assertThat(result).isEmpty();
+    }
+
+    @Test
+    public void whenUserExistsButNoVotesAtAll() {
+        var result = new ArrayList<Content>();
+        var sentContent = new SentContent() {
+            @Override
+            public void sent(Content content) {
+                result.add(content);
+            }
+        };
+
+        var moodRepository = new MoodFakeRepository();
+        moodRepository.save(new Mood("Good", true));
+
+        var moodLogRepository = new MoodLogFakeRepository();
+        var userRepository = new UserFakeRepository(moodLogRepository);
+
+        var user = new User();
+        user.setChatId(500L);
+        userRepository.save(user);
+        // Не создаем MoodLog вообще
+
+        var tgUI = new TgUI(moodRepository);
+        new ReminderService(sentContent, userRepository, tgUI)
+                .remindUsers();
+
+        // Пользователь без голосов должен получить напоминание
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getChatId()).isEqualTo(500L);
     }
 }

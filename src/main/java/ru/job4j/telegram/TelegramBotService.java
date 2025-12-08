@@ -1,6 +1,7 @@
 package ru.job4j.telegram;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendAudio;
@@ -13,6 +14,7 @@ import ru.job4j.content.SentContent;
 import ru.job4j.content.SentContentException;
 
 @Service
+@Conditional(OnProdCondition.class)
 public class TelegramBotService extends TelegramLongPollingBot implements SentContent {
     private final BotCommandHandler handler;
     private final String botName;

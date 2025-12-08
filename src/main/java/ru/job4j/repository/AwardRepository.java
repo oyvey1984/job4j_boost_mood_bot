@@ -9,5 +9,5 @@ import java.util.Optional;
 @Repository
 public interface AwardRepository extends CrudRepository<Award, Long> {
     List<Award> findAll();
-    Optional<Award> findByDaysRequired(int daysRequired);
+    Optional<Award> findByDays(int daysRequired);
 }

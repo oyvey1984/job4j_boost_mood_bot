@@ -4,21 +4,25 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import ru.job4j.content.Content;
 import ru.job4j.content.SentContent;
+import ru.job4j.model.User;
 import ru.job4j.repository.MoodLogRepository;
+import ru.job4j.repository.UserRepository;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.List;
 
 @Service
 public class ReminderService {
     private final SentContent sentContent;
-    private final MoodLogRepository moodLogRepository;
+    private final UserRepository userRepository;
     private final TgUI tgUI;
 
     public ReminderService(SentContent sentContent,
-                           MoodLogRepository moodLogRepository, TgUI tgUI) {
+                           UserRepository userRepository,
+                           TgUI tgUI) {
         this.sentContent = sentContent;
-        this.moodLogRepository = moodLogRepository;
+        this.userRepository = userRepository;
         this.tgUI = tgUI;
     }
 
@@ -33,7 +37,8 @@ public class ReminderService {
                 .atStartOfDay(ZoneId.systemDefault())
                 .toInstant()
                 .toEpochMilli() - 1;
-        for (var user : moodLogRepository.findUsersWhoDidNotVoteToday(startOfDay, endOfDay)) {
+        List<User> usersWithoutVotes = userRepository.findUsersWithoutVotesToday(startOfDay, endOfDay);
+        for (var user : usersWithoutVotes) {
             var content = new Content(user.getChatId());
             content.setText("Как настроение?");
             content.setMarkup(tgUI.buildButtons());

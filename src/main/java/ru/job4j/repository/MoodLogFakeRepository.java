@@ -1,5 +1,7 @@
 package ru.job4j.repository;
 
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.test.fake.CrudRepositoryFake;
 import ru.job4j.model.MoodLog;
 import ru.job4j.model.User;
@@ -33,18 +35,12 @@ public class MoodLogFakeRepository
     }
 
     @Override
-    public List<User> findUsersWhoDidNotVoteToday(long startOfDay, long endOfDay) {
-        var usersWithLogsToday = memory.values().stream()
+    @Query("SELECT ml FROM MoodLog ml WHERE ml.createdAt BETWEEN :startOfDay AND :endOfDay")
+    public List<MoodLog> findTodayVotes(@Param("startOfDay") long startOfDay,
+                                        @Param("endOfDay") long endOfDay) {
+        return memory.values().stream()
                 .filter(moodLog -> moodLog.getCreatedAt() >= startOfDay)
                 .filter(moodLog -> moodLog.getCreatedAt() <= endOfDay)
-                .map(MoodLog::getUser)
-                .distinct()
-                .toList();
-
-        return memory.values().stream()
-                .map(MoodLog::getUser)
-                .distinct()
-                .filter(user -> !usersWithLogsToday.contains(user))
                 .collect(Collectors.toList());
     }
 
@@ -58,7 +54,9 @@ public class MoodLogFakeRepository
 
 
     @Override
-    public List<MoodLog> findMoodLogsForWeek(Long userId, long weekStart) {
+    @Query("SELECT ml FROM MoodLog ml WHERE ml.user.id = :userId AND ml.createdAt >= :weekStart")
+    public List<MoodLog> findMoodLogsForWeek(@Param("userId") Long userId,
+                                             @Param("weekStart") long weekStart) {
         return memory.values().stream()
                 .filter(moodLog -> moodLog.getUser().getId() == userId)
                 .filter(moodLog -> moodLog.getCreatedAt() >= weekStart)
@@ -66,7 +64,9 @@ public class MoodLogFakeRepository
     }
 
     @Override
-    public List<MoodLog> findMoodLogsForMonth(Long userId, long monthStart) {
+    @Query("SELECT ml FROM MoodLog ml WHERE ml.user.id = :userId AND ml.createdAt >= :monthStart")
+    public List<MoodLog> findMoodLogsForMonth(@Param("userId") Long userId,
+                                              @Param("monthStart") long monthStart) {
         return memory.values().stream()
                 .filter(moodLog -> moodLog.getUser().getId() == userId)
                 .filter(moodLog -> moodLog.getCreatedAt() >= monthStart)
