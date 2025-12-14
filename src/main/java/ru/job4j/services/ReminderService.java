@@ -4,6 +4,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import ru.job4j.content.Content;
 import ru.job4j.content.SentContent;
+import ru.job4j.exception.ReminderSendException;
 import ru.job4j.model.User;
 import ru.job4j.repository.MoodLogRepository;
 import ru.job4j.repository.UserRepository;
@@ -28,21 +29,25 @@ public class ReminderService {
 
     @Scheduled(fixedRateString = "${recommendation.alert.period}")
     public void remindUsers() {
-        var startOfDay = LocalDate.now()
-                .atStartOfDay(ZoneId.systemDefault())
-                .toInstant()
-                .toEpochMilli();
-        var endOfDay = LocalDate.now()
-                .plusDays(1)
-                .atStartOfDay(ZoneId.systemDefault())
-                .toInstant()
-                .toEpochMilli() - 1;
-        List<User> usersWithoutVotes = userRepository.findUsersWithoutVotesToday(startOfDay, endOfDay);
-        for (var user : usersWithoutVotes) {
-            var content = new Content(user.getChatId());
-            content.setText("Как настроение?");
-            content.setMarkup(tgUI.buildButtons());
-            sentContent.sent(content);
+        try {
+            var startOfDay = LocalDate.now()
+                    .atStartOfDay(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli();
+            var endOfDay = LocalDate.now()
+                    .plusDays(1)
+                    .atStartOfDay(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli() - 1;
+            List<User> usersWithoutVotes = userRepository.findUsersWithoutVotesToday(startOfDay, endOfDay);
+            for (var user : usersWithoutVotes) {
+                var content = new Content(user.getChatId());
+                content.setText("Как настроение?");
+                content.setMarkup(tgUI.buildButtons());
+                sentContent.sent(content);
+            }
+        } catch (Exception e) {
+            throw new ReminderSendException("Failed to send daily reminders", e);
         }
     }
 }

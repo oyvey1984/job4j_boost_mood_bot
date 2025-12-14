@@ -11,7 +11,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.job4j.content.Content;
 import ru.job4j.content.SentContent;
-import ru.job4j.content.SentContentException;
+import ru.job4j.exception.SentContentException;
 
 @Service
 @Conditional(OnProdCondition.class)

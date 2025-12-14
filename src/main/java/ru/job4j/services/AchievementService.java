@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.job4j.content.Content;
 import ru.job4j.content.SentContent;
 import ru.job4j.events.UserEvent;
+import ru.job4j.exception.*;
 import ru.job4j.model.Achievement;
 import ru.job4j.model.MoodLog;
 import ru.job4j.model.User;
@@ -42,31 +43,64 @@ public class AchievementService implements ApplicationListener<UserEvent> {
     @Transactional
     @Override
     public void onApplicationEvent(UserEvent event) {
-        User user = event.getUser();
-        long now = System.currentTimeMillis();
-        long sixtyDaysAgo = now - 60L * 24 * 60 * 60 * 1000;
-        List<MoodLog> logs = moodLogRepository
-                .findByUserClientIdAndCreatedAtBetween(
+        try {
+            User user = event.getUser();
+            long now = System.currentTimeMillis();
+            long sixtyDaysAgo = now - 60L * 24 * 60 * 60 * 1000;
+            List<MoodLog> logs;
+            try {
+                logs = moodLogRepository.findByUserClientIdAndCreatedAtBetween(
                         user.getClientId(),
                         sixtyDaysAgo,
                         now
                 );
-        long streak = calculateStreak(logs);
-        List<Award> awards = awardRepository.findAll();
-        for (Award award : awards) {
-            if (streak >= award.getDays()) {
-                boolean alreadyReceived = achievementRepository
-                        .existsByUserClientIdAndAwardId(user.getClientId(), award.getId());
-                if (!alreadyReceived) {
-                    Achievement achievement = new Achievement();
-                    achievement.setAward(award);
-                    achievement.setUser(user);
-                    achievement.setCreateAt(now);
-                    achievementRepository.save(achievement);
-                    sendAchievementNotification(user, award);
+            } catch (Exception e) {
+                throw new RepositoryAccessException(
+                        "Failed to load mood logs for user " + user.getClientId(),
+                        e
+                );
+            }
+            long streak;
+            try {
+                streak = calculateStreak(logs);
+            } catch (Exception e) {
+                throw new AchievementCalculationException(
+                        "Failed to calculate streak for user " + user.getClientId(),
+                        e
+                );
+            }
+            List<Award> awards = awardRepository.findAll();
+            for (Award award : awards) {
+                if (streak >= award.getDays()) {
+                    boolean alreadyReceived = achievementRepository
+                            .existsByUserClientIdAndAwardId(user.getClientId(), award.getId());
+                    if (!alreadyReceived) {
+                        Achievement achievement = new Achievement();
+                        achievement.setAward(award);
+                        achievement.setUser(user);
+                        achievement.setCreateAt(now);
+                        try {
+                            achievementRepository.save(achievement);
+                        } catch (Exception e) {
+                            throw new RepositoryAccessException("Failed to save achievement for user "
+                                    + user.getClientId()
+                                    + " and award "
+                                    + award.getId(),
+                                    e
+                            );
+                        }
+                        achievementRepository.save(achievement);
+                        sendAchievementNotification(user, award);
+                    }
                 }
             }
+        } catch (Exception e) {
+            throw new AchievementProcessingException(
+                    "Failed to process achievements for user " + event.getUser().getClientId(),
+                    e
+            );
         }
+
     }
 
     private long calculateStreak(List<MoodLog> logs) {
@@ -97,12 +131,20 @@ public class AchievementService implements ApplicationListener<UserEvent> {
     }
 
     private void sendAchievementNotification(User user, Award award) {
-        Content content = new Content(user.getChatId());
-        content.setText(
-                "🎉 Поздравляем! Вы получили достижение:\n\n"
-                        + "🏆 *" + award.getTitle() + "*\n\n"
-                        + award.getDescription()
-        );
-        sentContent.sent(content);
+        try {
+            Content content = new Content(user.getChatId());
+            content.setText(
+                    "🎉 Поздравляем! Вы получили достижение:\n\n"
+                            + "🏆 *" + award.getTitle() + "*\n\n"
+                            + award.getDescription()
+            );
+            sentContent.sent(content);
+        } catch (Exception e) {
+            throw new NotificationSendException(
+                    "Failed to send achievement notification to user " + user.getClientId(),
+                    e
+            );
+        }
+
     }
 }

@@ -1,9 +1,12 @@
 package ru.job4j.services;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import ru.job4j.content.Content;
 import ru.job4j.events.UserEvent;
+import ru.job4j.exception.MoodNotFoundException;
+import ru.job4j.exception.RepositoryAccessException;
 import ru.job4j.model.*;
 import ru.job4j.repository.AchievementRepository;
 import ru.job4j.repository.MoodLogRepository;
@@ -41,12 +44,16 @@ public class MoodService {
 
     public Content chooseMood(User user, Long moodId) {
         Mood mood = moodRepository.findById(moodId)
-                .orElseThrow(() -> new IllegalArgumentException("Mood not found: " + moodId));
+                .orElseThrow(() -> new MoodNotFoundException(moodId));
         MoodLog log = new MoodLog();
         log.setUser(user);
         log.setMood(mood);
         log.setCreatedAt(System.currentTimeMillis());
-        moodLogRepository.save(log);
+        try {
+            moodLogRepository.save(log);
+        } catch (DataAccessException e) {
+            throw new RepositoryAccessException("Failed to save mood log", e);
+        }
         publisher.publishEvent(new UserEvent(this, user));
         return recommendationEngine.recommendFor(user.getChatId(), moodId);
     }
