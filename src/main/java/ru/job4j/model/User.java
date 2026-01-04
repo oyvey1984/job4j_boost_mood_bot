@@ -18,6 +18,10 @@ public class User {
     @Column(name = "chat_id")
     private long chatId;
 
+    private boolean remindersEnabled = true;
+
+    private boolean adviceEnabled = true;
+
     public User() {
     }
 
@@ -43,6 +47,22 @@ public class User {
 
     public void setChatId(long chatId) {
         this.chatId = chatId;
+    }
+
+    public boolean isAdviceEnabled() {
+        return adviceEnabled;
+    }
+
+    public void setAdviceEnabled(boolean adviceEnabled) {
+        this.adviceEnabled = adviceEnabled;
+    }
+
+    public boolean isRemindersEnabled() {
+        return remindersEnabled;
+    }
+
+    public void setRemindersEnabled(boolean remindersEnabled) {
+        this.remindersEnabled = remindersEnabled;
     }
 
     @Override

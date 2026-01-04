@@ -9,6 +9,7 @@ import ru.job4j.model.User;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -25,6 +26,11 @@ public class MoodLogFakeRepository
         return memory.values().stream()
                 .filter(moodLog -> moodLog.getUser().getId() == userId)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<MoodLog> findTodayLastVoteByUserId(Long userId, long startOfDay, long endOfDay) {
+        return Optional.empty();
     }
 
     @Override
@@ -45,13 +51,22 @@ public class MoodLogFakeRepository
     }
 
     @Override
+    public List<MoodLog> findTodayLastVotes(long startOfDay, long endOfDay) {
+        return List.of();
+    }
+
+    @Override
+    public List<MoodLog> findTodayLastVotesWithAdviceEnabled(long startOfDay, long endOfDay) {
+        return List.of();
+    }
+
+    @Override
     public List<MoodLog> findByUserClientIdAndCreatedAtBetween(Long clientId, long from, long to) {
         return memory.values().stream()
                 .filter(moodLog -> moodLog.getUser().getClientId() == clientId)
                 .filter(moodLog -> moodLog.getCreatedAt() >= from && moodLog.getCreatedAt() <= to)
                 .collect(Collectors.toList());
     }
-
 
     @Override
     @Query("SELECT ml FROM MoodLog ml WHERE ml.user.id = :userId AND ml.createdAt >= :weekStart")

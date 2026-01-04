@@ -51,4 +51,14 @@ public class UserFakeRepository
                 .filter(user -> !userIdsWithVotesToday.contains(user.getId()))
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<User> findUsersWithVotesToday(long startOfDay, long endOfDay) {
+        return List.of();
+    }
+
+    @Override
+    public List<User> findUsersForReminder(long start, long end) {
+        return List.of();
+    }
 }
