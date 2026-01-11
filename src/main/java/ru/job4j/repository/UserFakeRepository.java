@@ -58,7 +58,16 @@ public class UserFakeRepository
     }
 
     @Override
-    public List<User> findUsersForReminder(long start, long end) {
-        return List.of();
+    public List<User> findUsersForReminder(long startOfDay, long endOfDay) {
+        List<MoodLog> todayVotes = moodLogRepository.findTodayVotes(startOfDay, endOfDay);
+
+        Set<Long> userIdsWithVotesToday = todayVotes.stream()
+                .map(moodLog -> moodLog.getUser().getId())
+                .collect(Collectors.toSet());
+
+        return memory.values().stream()
+                .filter(user -> !userIdsWithVotesToday.contains(user.getId()))
+                .filter(User::isRemindersEnabled)
+                .collect(Collectors.toList());
     }
 }
