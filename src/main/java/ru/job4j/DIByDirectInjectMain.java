@@ -18,3 +18,5 @@ public class DIByDirectInjectMain   {
         System.out.println("Bean will be destroyed via @PreDestroy.");
     }
 }
+
+
