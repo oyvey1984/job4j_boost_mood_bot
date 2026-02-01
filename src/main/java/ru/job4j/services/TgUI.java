@@ -5,6 +5,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import ru.job4j.exception.RepositoryAccessException;
 import ru.job4j.model.Mood;
+import ru.job4j.model.User;
 import ru.job4j.repository.MoodRepository;
 
 import java.util.ArrayList;
@@ -37,7 +38,25 @@ public class TgUI {
     private InlineKeyboardButton createBtn(String name, Long moodId) {
         var inline = new InlineKeyboardButton();
         inline.setText(name);
-        inline.setCallbackData(String.valueOf(moodId));
+        inline.setCallbackData("MOOD:" + moodId);
         return inline;
     }
+
+    public InlineKeyboardMarkup buildSettingsButtons(User user) {
+        InlineKeyboardButton reminderBtn = new InlineKeyboardButton();
+        reminderBtn.setText("🔔 Напоминания: " + (user.isRemindersEnabled() ? "ВКЛ" : "ВЫКЛ"));
+        reminderBtn.setCallbackData(SettingsCallback.TOGGLE_REMINDER.name());
+
+        InlineKeyboardButton adviceBtn = new InlineKeyboardButton();
+        adviceBtn.setText("💡 Советы: " + (user.isAdviceEnabled() ? "ВКЛ" : "ВЫКЛ"));
+        adviceBtn.setCallbackData(SettingsCallback.TOGGLE_ADVICE.name());
+
+        return new InlineKeyboardMarkup(
+                List.of(
+                        List.of(reminderBtn),
+                        List.of(adviceBtn)
+                )
+        );
+    }
+
 }

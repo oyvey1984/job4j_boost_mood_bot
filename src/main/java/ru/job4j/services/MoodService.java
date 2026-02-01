@@ -30,10 +30,12 @@ public class MoodService {
             .withZone(ZoneId.systemDefault());
     private final ApplicationEventPublisher publisher;
 
-    public MoodService(MoodLogRepository moodLogRepository, MoodRepository moodRepository,
+    public MoodService(MoodLogRepository moodLogRepository,
+                       MoodRepository moodRepository,
                        RecommendationEngine recommendationEngine,
                        UserRepository userRepository,
-                       AchievementRepository achievementRepository, ApplicationEventPublisher publisher) {
+                       AchievementRepository achievementRepository,
+                       ApplicationEventPublisher publisher) {
         this.moodLogRepository = moodLogRepository;
         this.moodRepository = moodRepository;
         this.recommendationEngine = recommendationEngine;
@@ -55,7 +57,7 @@ public class MoodService {
             throw new RepositoryAccessException("Failed to save mood log", e);
         }
         publisher.publishEvent(new UserEvent(this, user));
-        return recommendationEngine.recommendFor(user.getChatId(), moodId);
+        return recommendationEngine.reactionToMood(user.getChatId(), moodId, mood.isGood());
     }
 
     public Optional<Content> weekMoodLogCommand(long chatId, Long clientId) {
@@ -118,4 +120,5 @@ public class MoodService {
         content.setText(sb.toString());
         return Optional.of(content);
     }
+
 }

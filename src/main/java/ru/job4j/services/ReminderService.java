@@ -6,7 +6,6 @@ import ru.job4j.content.Content;
 import ru.job4j.content.SentContent;
 import ru.job4j.exception.ReminderSendException;
 import ru.job4j.model.User;
-import ru.job4j.repository.MoodLogRepository;
 import ru.job4j.repository.UserRepository;
 
 import java.time.LocalDate;
@@ -27,7 +26,7 @@ public class ReminderService {
         this.tgUI = tgUI;
     }
 
-    @Scheduled(fixedRateString = "${recommendation.alert.period}")
+    @Scheduled(cron = "0 30 15 * * *")
     public void remindUsers() {
         try {
             var startOfDay = LocalDate.now()
@@ -39,7 +38,7 @@ public class ReminderService {
                     .atStartOfDay(ZoneId.systemDefault())
                     .toInstant()
                     .toEpochMilli() - 1;
-            List<User> usersWithoutVotes = userRepository.findUsersWithoutVotesToday(startOfDay, endOfDay);
+            List<User> usersWithoutVotes = userRepository.findUsersForReminder(startOfDay, endOfDay);
             for (var user : usersWithoutVotes) {
                 var content = new Content(user.getChatId());
                 content.setText("Как настроение?");

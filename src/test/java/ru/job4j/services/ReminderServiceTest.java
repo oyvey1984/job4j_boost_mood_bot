@@ -195,13 +195,11 @@ class ReminderServiceTest {
         var user = new User();
         user.setChatId(500L);
         userRepository.save(user);
-        // Не создаем MoodLog вообще
 
         var tgUI = new TgUI(moodRepository);
         new ReminderService(sentContent, userRepository, tgUI)
                 .remindUsers();
 
-        // Пользователь без голосов должен получить напоминание
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getChatId()).isEqualTo(500L);
     }
